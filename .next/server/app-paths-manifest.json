@@ -1,0 +1,10 @@
+{
+  "/api/admin/appels/route": "app/api/admin/appels/route.js",
+  "/api/admin/commandes/route": "app/api/admin/commandes/route.js",
+  "/api/admin/reservations/route": "app/api/admin/reservations/route.js",
+  "/commandes/page": "app/commandes/page.js",
+  "/page": "app/page.js",
+  "/menu/page": "app/menu/page.js",
+  "/reservation/page": "app/reservation/page.js",
+  "/admin/commandes/page": "app/admin/commandes/page.js"
+}

@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: moonkey-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moonkey
+      POSTGRES_PASSWORD: moonkey
+      POSTGRES_DB: moonkey
+    ports:
+      - "5433:5432"   # 5433 sur la machine pour éviter le conflit avec un PostgreSQL déjà sur 5432
+    volumes:
+      - moonkey_pgdata:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d
+volumes:
+  moonkey_pgdata:
