@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ReservationCreate, ExperienceReservation } from "@/types/reservation";
+import { resolveMx, resolve4, resolve6 } from "node:dns/promises";
 import { query } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getReservationCreneaux } from "@/lib/constants";
@@ -19,6 +20,44 @@ const EXPERIENCES: ExperienceReservation[] = [
   "anniversaire",
 ];
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "mailinator.com",
+  "guerrillamail.com",
+  "10minutemail.com",
+  "tempmail.com",
+  "yopmail.com",
+]);
+
+async function isDeliverableEmail(email: string): Promise<boolean> {
+  const normalized = email.trim().toLowerCase();
+  if (!EMAIL_REGEX.test(normalized)) return false;
+  const domain = normalized.split("@")[1];
+  if (!domain) return false;
+  if (DISPOSABLE_EMAIL_DOMAINS.has(domain)) return false;
+
+  try {
+    const mx = await resolveMx(domain);
+    if (mx.length > 0) return true;
+  } catch {
+    // fallback below
+  }
+
+  try {
+    const ipv4 = await resolve4(domain);
+    if (ipv4.length > 0) return true;
+  } catch {
+    // fallback below
+  }
+
+  try {
+    const ipv6 = await resolve6(domain);
+    return ipv6.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 function validateBody(body: unknown): body is ReservationCreate {
   if (!body || typeof body !== "object") return false;
   const b = body as Record<string, unknown>;
@@ -31,7 +70,7 @@ function validateBody(body: unknown): body is ReservationCreate {
     typeof b.telephone === "string" &&
     b.telephone.replace(/\D/g, "").length >= 10 &&
     typeof b.email === "string" &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email.trim()) &&
+    EMAIL_REGEX.test(b.email.trim()) &&
     typeof b.nombre_personnes === "number" &&
     b.nombre_personnes >= 1 &&
     b.nombre_personnes <= 20 &&
@@ -187,6 +226,13 @@ export async function POST(request: NextRequest) {
           ? (body.experience as ExperienceReservation)
           : undefined,
     };
+    const hasDeliverableEmail = await isDeliverableEmail(data.email);
+    if (!hasDeliverableEmail) {
+      return NextResponse.json(
+        { error: "Adresse email invalide ou non recevable." },
+        { status: 400 }
+      );
+    }
     const allowedCreneaux = getReservationCreneaux(data.date);
     if (!allowedCreneaux.includes(data.creneau)) {
       return NextResponse.json(
