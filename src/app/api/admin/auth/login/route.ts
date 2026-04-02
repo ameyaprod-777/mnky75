@@ -40,9 +40,15 @@ export async function POST(request: NextRequest) {
 
   const value = hashSessionSeed(buildSessionSeed(identifiant, password));
   const res = NextResponse.json({ ok: true }, { status: 200 });
+
+  // Le cookie `secure` ne doit être activé que si la requête arrive en HTTPS.
+  // Sinon, en test via `http://IP:PORT`, le navigateur refuse d'enregistrer le cookie.
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const isHttps =
+    forwardedProto === "https" || request.nextUrl.protocol === "https:";
   res.cookies.set(COOKIE_NAME, value, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isHttps,
     sameSite: "lax",
     path: "/",
     maxAge: COOKIE_MAX_AGE,
