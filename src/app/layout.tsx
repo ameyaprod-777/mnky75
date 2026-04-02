@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   title: `${SITE.name} — ${SITE.tagline} | ${SITE.city}`,
   description: `Restaurant Lounge Chicha haut de gamme à Paris. ${SITE.fullAddress}. Réservez votre table, découvrez notre menu chichas, plats et boissons.`,
   keywords: ["chicha", "lounge", "restaurant", "Paris", "75014", "Moonkey"],
+  icons: {
+    icon: "/images/icon-moonkey-gold.png",
+    shortcut: "/images/icon-moonkey-gold.png",
+    apple: "/images/icon-moonkey-gold.png",
+  },
   openGraph: {
     title: `${SITE.name} — ${SITE.tagline}`,
     description: `Restaurant Lounge Chicha. ${SITE.fullAddress}.`,
