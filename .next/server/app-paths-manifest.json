@@ -1,5 +1,4 @@
 {
-  "/commandes/page": "app/commandes/page.js",
-  "/menu/page": "app/menu/page.js",
-  "/page": "app/page.js"
+  "/api/status/route": "app/api/status/route.js",
+  "/commandes/page": "app/commandes/page.js"
 }

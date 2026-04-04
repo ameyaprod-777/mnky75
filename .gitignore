@@ -1,2 +1,19 @@
+# Dépendances
 node_modules
+
+# Next.js (build + cache — ne pas commiter)
+.next/
+out/
+
+# Env local
 .env.local
+.env*.local
+
+# OS / éditeurs
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
