@@ -47,6 +47,7 @@ export function CommanderClient() {
   const [activeCategory, setActiveCategory] = useState<MenuCategoryId | null>(null);
   const [variantPick, setVariantPick] = useState<Record<string, string>>({});
   const [cuissonPick, setCuissonPick] = useState<Record<string, string>>({});
+  const [goutPick, setGoutPick] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/status")
@@ -340,7 +341,7 @@ export function CommanderClient() {
                 {group.items.map((item) => {
                   const hasVariants = Boolean(item.variants?.length);
                   const line = hasVariants
-                    ? resolveMenuVariantLine(item, variantPick, cuissonPick)
+                    ? resolveMenuVariantLine(item, variantPick, cuissonPick, goutPick)
                     : item;
                   return (
                     <li
@@ -407,6 +408,34 @@ export function CommanderClient() {
                                   {item.cuissonVariants.map((c) => (
                                     <option key={c.key} value={c.key}>
                                       {c.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            )}
+                            {item.goutChichaVariants && item.goutChichaVariants.length > 0 && (
+                              <label className="mt-2 block max-w-sm">
+                                <span className="sr-only">Goût chicha</span>
+                                <select
+                                  value={
+                                    goutPick[item.id] &&
+                                    item.goutChichaVariants.some(
+                                      (g) => g.key === goutPick[item.id]
+                                    )
+                                      ? goutPick[item.id]
+                                      : item.goutChichaVariants[0].key
+                                  }
+                                  onChange={(e) =>
+                                    setGoutPick((p) => ({
+                                      ...p,
+                                      [item.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="w-full rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30"
+                                >
+                                  {item.goutChichaVariants.map((g) => (
+                                    <option key={g.key} value={g.key}>
+                                      {g.label}
                                     </option>
                                   ))}
                                 </select>

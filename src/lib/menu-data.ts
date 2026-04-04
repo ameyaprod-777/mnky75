@@ -118,7 +118,8 @@ function cuissonPlatVariants(prix: number): MenuItemVariant[] {
 export function resolveMenuVariantLine(
   item: MenuItemData,
   pick: Record<string, string>,
-  cuissonPick: Record<string, string> = {}
+  cuissonPick: Record<string, string> = {},
+  goutPick: Record<string, string> = {}
 ): MenuItemData {
   if (!item.variants?.length) return item;
   const first = item.variants[0];
@@ -136,6 +137,7 @@ export function resolveMenuVariantLine(
     description: undefined,
     variants: undefined,
     cuissonVariants: undefined,
+    goutChichaVariants: undefined,
   };
   if (item.cuissonVariants?.length) {
     const cFirst = item.cuissonVariants[0];
@@ -149,6 +151,20 @@ export function resolveMenuVariantLine(
       ...line,
       id: `${line.id}__${c.key}`,
       nom: `${line.nom} — ${c.label}`,
+    };
+  }
+  if (item.goutChichaVariants?.length) {
+    const gFirst = item.goutChichaVariants[0];
+    const gChosenKey =
+      goutPick[item.id] &&
+      item.goutChichaVariants.some((x) => x.key === goutPick[item.id])
+        ? goutPick[item.id]
+        : gFirst.key;
+    const g = item.goutChichaVariants.find((x) => x.key === gChosenKey)!;
+    line = {
+      ...line,
+      id: `${line.id}__${g.key}`,
+      nom: `${line.nom} — ${g.label}`,
     };
   }
   return line;
@@ -166,6 +182,8 @@ export interface MenuItemData {
   garnitureChoice?: boolean;
   /** Cuisson au choix (ex. plats), prix inchangé ; affiché en second menu après les variantes */
   cuissonVariants?: MenuItemVariant[];
+  /** Goût chicha (ex. Celeste + soft après le choix soft), prix inchangé */
+  goutChichaVariants?: MenuItemVariant[];
 }
 
 /** Grandes lignes affichées sur la page d'accueil (liens vers la carte filtrée) */
@@ -286,24 +304,32 @@ export const MENU_ITEMS: MenuItemData[] = [
   {
     id: "c1",
     nom: "CHICHA CELESTE + SOFT",
-    description: "Choisissez votre soft ci-dessous",
+    description: "Choisissez votre soft puis votre goût ci-dessous",
     prix: 15,
     categorie: "chichas",
     garnitureChoice: true,
     variants: softVariantsForChicha(15),
+    goutChichaVariants: chichaGoutVariants(15),
   },
-  { id: "c2", nom: "CHICHA KALOUD", prix: 15, categorie: "chichas" },
-  { id: "c3", nom: "CHICHA QUASAR", prix: 20, categorie: "chichas" },
-  { id: "c4", nom: "TÊTE SUPPLÉMENTAIRE", prix: 5, categorie: "chichas" },
   {
-    id: "c5",
-    nom: "GOÛTS DISPONIBLE",
+    id: "c2",
+    nom: "CHICHA KALOUD",
     description: "Choisissez votre goût ci-dessous",
-    prix: 0,
+    prix: 15,
     categorie: "chichas",
     garnitureChoice: true,
-    variants: chichaGoutVariants(0),
+    variants: chichaGoutVariants(15),
   },
+  {
+    id: "c3",
+    nom: "CHICHA QUASAR",
+    description: "Choisissez votre goût ci-dessous",
+    prix: 20,
+    categorie: "chichas",
+    garnitureChoice: true,
+    variants: chichaGoutVariants(20),
+  },
+  { id: "c4", nom: "TÊTE SUPPLÉMENTAIRE", prix: 5, categorie: "chichas" },
   // ——— Desserts ———
   {
     id: "d1",
