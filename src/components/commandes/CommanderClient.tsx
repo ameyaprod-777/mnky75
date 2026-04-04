@@ -2,14 +2,27 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Plus, Minus, Clock, Bell, Flame } from "lucide-react";
+import {
+  ShoppingCart,
+  Plus,
+  Minus,
+  Clock,
+  Bell,
+  Flame,
+  Trash2,
+} from "lucide-react";
 import {
   MENU_CATEGORIES,
   MENU_ITEMS,
+  resolveMenuVariantLine,
   type MenuItemData,
   type MenuCategoryId,
 } from "@/lib/menu-data";
 import type { CommandeItem } from "@/types/commande";
+import {
+  computeCommandeFormules,
+  PRIX_FORMULE_COMMANDE,
+} from "@/lib/formules-commande";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +40,13 @@ export function CommanderClient() {
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [commentError, setCommentError] = useState<string | null>(null);
   const [delaiCommandes, setDelaiCommandes] = useState<string | null>(null);
-  const [numeroTableAppel, setNumeroTableAppel] = useState("");
+  const [numeroTable, setNumeroTable] = useState("");
   const [appelSending, setAppelSending] = useState<"serveur" | "charbon" | null>(null);
   const [appelSuccess, setAppelSuccess] = useState<"serveur" | "charbon" | null>(null);
   const [activeCategory, setActiveCategory] = useState<MenuCategoryId | null>(null);
+  const [variantPick, setVariantPick] = useState<Record<string, string>>({});
+  const [cuissonPick, setCuissonPick] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/status")
@@ -41,11 +55,21 @@ export function CommanderClient() {
       .catch(() => setDelaiCommandes(null));
   }, []);
 
-  const total = useMemo(
+  const pricing = useMemo(
     () =>
-      cart.reduce((acc, { item, quantite }) => acc + item.prix * quantite, 0),
+      computeCommandeFormules(
+        cart.map(({ item, quantite }) => ({
+          quantite,
+          item: {
+            id: item.id,
+            categorie: item.categorie,
+            prix: item.prix,
+          },
+        }))
+      ),
     [cart]
   );
+  const total = pricing.total;
 
   const filteredItems =
     activeCategory === null
@@ -85,15 +109,12 @@ export function CommanderClient() {
 
   const submit = async () => {
     if (cart.length === 0) return;
-    if (!commentaire.trim()) {
-      setCommentError(
-        "Merci d'indiquer un commentaire (par exemple le numéro de table) avant d'envoyer la commande."
-      );
+    setError(null);
+    if (!numeroTable.trim()) {
+      setError("Merci d'indiquer votre numéro de table avant d'envoyer la commande.");
       return;
     }
     setSending(true);
-    setError(null);
-    setCommentError(null);
     try {
       const items: CommandeItem[] = cart.map(({ item, quantite }) => ({
         id: item.id,
@@ -107,6 +128,7 @@ export function CommanderClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
+          numero_table: numeroTable.trim(),
           commentaire: commentaire.trim() || undefined,
         }),
       });
@@ -126,7 +148,7 @@ export function CommanderClient() {
   };
 
   const sendAppel = async (type: "serveur" | "charbon") => {
-    if (!numeroTableAppel.trim()) {
+    if (!numeroTable.trim()) {
       setError("Merci d'indiquer votre numéro de table avant d'appeler.");
       return;
     }
@@ -138,7 +160,7 @@ export function CommanderClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type,
-          numero_table: numeroTableAppel.trim() || undefined,
+          numero_table: numeroTable.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -172,6 +194,12 @@ export function CommanderClient() {
         <p className="mx-auto mt-5 max-w-lg text-sm text-jungle-300/90">
           Chichas, boissons, plats — votre commande sera transmise au bar.
         </p>
+        <p className="mx-auto mt-4 max-w-lg rounded-xl border border-gold-500/20 bg-gold-500/5 px-4 py-3 text-center text-xs leading-relaxed text-jungle-300/95">
+          <span className="font-semibold text-gold-400/90">Formules {PRIX_FORMULE_COMMANDE} €</span>
+          {" — "}
+          entrée + dessert + chicha, ou plat (sauf entrecôte) + chicha. Le total
+          s&apos;ajuste automatiquement dans le panier.
+        </p>
       </motion.div>
 
       {delaiCommandes && (
@@ -204,6 +232,32 @@ export function CommanderClient() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
+        className="mb-4 rounded-xl border border-jungle-800/40 bg-jungle-sage/40 px-4 py-3 sm:inline-flex sm:max-w-md sm:items-center sm:gap-4"
+      >
+        <label
+          htmlFor="numero-table-global"
+          className="mb-2 block text-xs font-medium uppercase tracking-wider text-jungle-400 sm:mb-0 sm:shrink-0"
+        >
+          Numéro de table <span className="text-amber-400/90">(obligatoire)</span>
+        </label>
+        <input
+          id="numero-table-global"
+          type="text"
+          value={numeroTable}
+          onChange={(e) => {
+            setNumeroTable(e.target.value);
+            if (error?.includes("numéro de table")) setError(null);
+          }}
+          placeholder="Ex : 12"
+          aria-required="true"
+          autoComplete="off"
+          className="w-full min-w-[100px] rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream placeholder-jungle-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30 sm:max-w-[140px]"
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
         className="mb-8 rounded-2xl border border-jungle-800/40 bg-jungle-sage/40 p-5"
       >
         <div className="mb-3 flex items-center gap-2 text-jungle-cream">
@@ -213,18 +267,6 @@ export function CommanderClient() {
         <p className="mb-4 text-sm text-jungle-400">
           Besoin d&apos;un serveur ou de charbon pour la chicha ? Envoyez un signal, l&apos;équipe sera prévenue.
         </p>
-        <div className="mb-4">
-          <label className="mb-1.5 block text-xs text-jungle-500">
-            Numéro de table (obligatoire pour appeler)
-          </label>
-          <input
-            type="text"
-            value={numeroTableAppel}
-            onChange={(e) => setNumeroTableAppel(e.target.value)}
-            placeholder="Ex: 12"
-            className="w-full max-w-[120px] rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream placeholder-jungle-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30"
-          />
-        </div>
         <div className="flex flex-wrap gap-3">
           <Button
             variant="secondary"
@@ -295,49 +337,113 @@ export function CommanderClient() {
                 {group.label}
               </h2>
               <ul className="space-y-2">
-                {group.items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-jungle-800/40 bg-jungle-sage/30 px-4 py-3"
-                  >
-                    <div>
-                      <span className="font-medium text-jungle-cream">
-                        {item.nom}
-                      </span>
-                      {item.description && (
-                        <p className="text-xs text-jungle-500">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gold-400/90">
-                        {formatPrix(item.prix)}
-                      </span>
-                      <div className="flex items-center gap-1 rounded-lg border border-jungle-700/50 bg-jungle-sage/50">
-                        <button
-                          type="button"
-                          aria-label="Retirer"
-                          className="flex h-8 w-8 items-center justify-center text-jungle-400 hover:bg-jungle-700/50 hover:text-jungle-cream rounded-l-md transition-colors"
-                          onClick={() => remove(item.id)}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <span className="min-w-[24px] text-center text-sm text-jungle-cream">
-                          {cart.find((c) => c.item.id === item.id)?.quantite ?? 0}
+                {group.items.map((item) => {
+                  const hasVariants = Boolean(item.variants?.length);
+                  const line = hasVariants
+                    ? resolveMenuVariantLine(item, variantPick, cuissonPick)
+                    : item;
+                  return (
+                    <li
+                      key={item.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-jungle-800/40 bg-jungle-sage/30 px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium text-jungle-cream">
+                          {item.nom}
                         </span>
-                        <button
-                          type="button"
-                          aria-label="Ajouter"
-                          className="flex h-8 w-8 items-center justify-center text-jungle-400 hover:bg-jungle-700/50 hover:text-jungle-cream rounded-r-md transition-colors"
-                          onClick={() => add(item)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
+                        {item.description && (
+                          <p className="text-xs text-jungle-500">
+                            {item.description}
+                          </p>
+                        )}
+                        {hasVariants && item.variants && (
+                          <>
+                            <label className="mt-2 block max-w-sm">
+                              <span className="sr-only">Choisir une option</span>
+                              <select
+                                value={
+                                  variantPick[item.id] &&
+                                  item.variants.some((v) => v.key === variantPick[item.id])
+                                    ? variantPick[item.id]
+                                    : item.variants[0].key
+                                }
+                                onChange={(e) =>
+                                  setVariantPick((p) => ({
+                                    ...p,
+                                    [item.id]: e.target.value,
+                                  }))
+                                }
+                                className="w-full rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30"
+                              >
+                                {item.variants.map((v) => (
+                                  <option key={v.key} value={v.key}>
+                                    {item.garnitureChoice
+                                      ? v.label
+                                      : `${v.label} — ${formatPrix(v.prix)}`}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            {item.cuissonVariants && item.cuissonVariants.length > 0 && (
+                              <label className="mt-2 block max-w-sm">
+                                <span className="sr-only">Cuisson</span>
+                                <select
+                                  value={
+                                    cuissonPick[item.id] &&
+                                    item.cuissonVariants.some(
+                                      (c) => c.key === cuissonPick[item.id]
+                                    )
+                                      ? cuissonPick[item.id]
+                                      : item.cuissonVariants[0].key
+                                  }
+                                  onChange={(e) =>
+                                    setCuissonPick((p) => ({
+                                      ...p,
+                                      [item.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="w-full rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30"
+                                >
+                                  {item.cuissonVariants.map((c) => (
+                                    <option key={c.key} value={c.key}>
+                                      {c.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            )}
+                          </>
+                        )}
                       </div>
-                    </div>
-                  </li>
-                ))}
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-sm font-medium text-gold-400/90">
+                          {formatPrix(line.prix)}
+                        </span>
+                        <div className="flex items-center gap-1 rounded-lg border border-jungle-700/50 bg-jungle-sage/50">
+                          <button
+                            type="button"
+                            aria-label="Retirer"
+                            className="flex h-8 w-8 items-center justify-center text-jungle-400 hover:bg-jungle-700/50 hover:text-jungle-cream rounded-l-md transition-colors"
+                            onClick={() => remove(line.id)}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="min-w-[24px] text-center text-sm text-jungle-cream">
+                            {cart.find((c) => c.item.id === line.id)?.quantite ?? 0}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Ajouter"
+                            className="flex h-8 w-8 items-center justify-center text-jungle-400 hover:bg-jungle-700/50 hover:text-jungle-cream rounded-r-md transition-colors"
+                            onClick={() => add(line)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ))}
@@ -355,49 +461,94 @@ export function CommanderClient() {
               </p>
             ) : (
               <>
-                <ul className="mb-4 max-h-48 space-y-2 overflow-y-auto text-sm">
+                <ul className="mb-4 max-h-64 space-y-3 overflow-y-auto text-sm">
                   {cart.map(({ item, quantite }) => (
                     <li
                       key={item.id}
-                      className="flex justify-between gap-2 text-jungle-300"
+                      className="flex flex-wrap items-center justify-between gap-2 border-b border-jungle-800/30 pb-3 last:border-0 last:pb-0"
                     >
-                      <span>
-                        {quantite}× {item.nom}
+                      <span className="min-w-0 flex-1 text-jungle-300">
+                        {item.nom}
                       </span>
-                      <span className="text-gold-400/90">
-                        {formatPrix(item.prix * quantite)}
-                      </span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex items-center gap-0 rounded-lg border border-jungle-700/50 bg-jungle-sage/50">
+                          <button
+                            type="button"
+                            aria-label="Retirer une unité"
+                            className="flex h-8 w-8 items-center justify-center text-jungle-400 hover:bg-jungle-700/50 hover:text-jungle-cream rounded-l-md transition-colors"
+                            onClick={() => remove(item.id, 1)}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="min-w-[28px] text-center text-sm text-jungle-cream">
+                            {quantite}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Ajouter une unité"
+                            className="flex h-8 w-8 items-center justify-center text-jungle-400 hover:bg-jungle-700/50 hover:text-jungle-cream rounded-r-md transition-colors"
+                            onClick={() => add(item, 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label="Retirer du panier"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-jungle-700/50 text-jungle-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                          onClick={() => remove(item.id, quantite)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <span className="min-w-[4.5rem] text-right text-gold-400/90">
+                          {formatPrix(item.prix * quantite)}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
+                {pricing.remise > 0.005 && (
+                  <div className="mb-3 space-y-1 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-jungle-300">
+                    <p className="flex justify-between gap-2">
+                      <span>Sous-total articles</span>
+                      <span>{formatPrix(pricing.brut)}</span>
+                    </p>
+                    {pricing.bundlesEdc > 0 && (
+                      <p className="text-emerald-400/90">
+                        {pricing.bundlesEdc}× formule entrée + dessert + chicha à{" "}
+                        {PRIX_FORMULE_COMMANDE} €
+                      </p>
+                    )}
+                    {pricing.bundlesPc > 0 && (
+                      <p className="text-emerald-400/90">
+                        {pricing.bundlesPc}× formule plat + chicha à{" "}
+                        {PRIX_FORMULE_COMMANDE} €
+                      </p>
+                    )}
+                    <p className="flex justify-between gap-2 border-t border-emerald-500/15 pt-1 text-emerald-300/95">
+                      <span>Remise formules</span>
+                      <span>−{formatPrix(pricing.remise)}</span>
+                    </p>
+                  </div>
+                )}
                 <p className="text-base font-semibold text-jungle-cream">
                   Total : {formatPrix(total)}
                 </p>
-                {commentError && (
-                  <p className="mt-2 text-sm text-red-400">
-                    {commentError}
-                  </p>
-                )}
                 <label className="mt-3 block">
                   <span className="mb-1 block text-xs text-jungle-500">
-                    Commentaire (obligatoire — ex: numéro de table)
+                    Commentaire (facultatif)
                   </span>
                   <input
                     type="text"
                     value={commentaire}
-                    onChange={(e) => {
-                      setCommentaire(e.target.value);
-                      if (commentError && e.target.value.trim()) {
-                        setCommentError(null);
-                      }
-                    }}
-                    placeholder="Numéro de table, précision..."
+                    onChange={(e) => setCommentaire(e.target.value)}
+                    placeholder="Allergie, précision sur la commande…"
                     className="w-full rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream placeholder-jungle-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30"
                   />
                 </label>
                 <Button
                   className="mt-4 w-full"
-                  disabled={sending}
+                  disabled={sending || !numeroTable.trim()}
                   onClick={submit}
                 >
                   {sending ? "Envoi…" : "Envoyer la commande"}

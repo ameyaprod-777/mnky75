@@ -61,15 +61,21 @@ function resolveFromAddress(): string {
 export async function sendReservationReceivedEmail(input: {
   to: string;
   prenom: string;
+  nombre_personnes: number;
 }): Promise<void> {
   const tx = getTransporter();
   if (!tx) return;
 
   const from = resolveFromAddress();
   const subject = "Moonkey Paris - Demande de réservation reçue";
+  const nb =
+    input.nombre_personnes === 1
+      ? "1 personne"
+      : `${input.nombre_personnes} personnes`;
   const text = `Bonjour ${input.prenom},
 
 Nous vous confirmons que votre demande de réservation a bien été reçue.
+Nombre de personnes : ${nb}
 Une réponse vous sera délivrée rapidement.
 
 Cordialement,
@@ -108,6 +114,7 @@ L'équipe Moonkey Paris`;
           <tr>
             <td style="padding:5px 20px 20px 20px;font-family:Arial,Helvetica,sans-serif;color:#414141;font-size:16px;line-height:1.6;">
               Nous vous confirmons que votre demande de réservation a bien été reçue.<br/>
+              <strong>Nombre de personnes :</strong> ${input.nombre_personnes === 1 ? "1 personne" : `${input.nombre_personnes} personnes`}<br/>
               Une réponse vous sera délivrée rapidement.
             </td>
           </tr>
@@ -156,6 +163,7 @@ export async function sendReservationConfirmedEmail(input: {
   prenom: string;
   date: string;
   creneau: string;
+  nombre_personnes: number;
 }): Promise<void> {
   const tx = getTransporter();
   if (!tx) return;
@@ -163,12 +171,17 @@ export async function sendReservationConfirmedEmail(input: {
   const from = resolveFromAddress();
   const subject = "Moonkey Paris - Réservation confirmée";
   const prettyDate = toFrenchReservationDateLabel(input.date);
+  const nb =
+    input.nombre_personnes === 1
+      ? "1 personne"
+      : `${input.nombre_personnes} personnes`;
   const text = `Bonjour ${input.prenom},
 
 Votre réservation est confirmée.
 
 Date : ${prettyDate}
 Horaire : ${input.creneau}
+Nombre de personnes : ${nb}
 
 Nous serons ravis de vous accueillir chez Moonkey Paris.
 Au-delà de 30 minutes de retard, la réservation sera considérée comme annulée.
@@ -211,7 +224,8 @@ L'équipe Moonkey Paris`;
             <td style="padding:5px 20px 20px 20px;font-family:Arial,Helvetica,sans-serif;color:#414141;font-size:16px;line-height:1.6;">
               Votre réservation est confirmée.<br /><br />
               <strong>Date :</strong> ${prettyDate}<br />
-              <strong>Horaire :</strong> ${input.creneau}<br /><br />
+              <strong>Horaire :</strong> ${input.creneau}<br />
+              <strong>Nombre de personnes :</strong> ${input.nombre_personnes === 1 ? "1 personne" : `${input.nombre_personnes} personnes`}<br /><br />
               Nous serons ravis de vous accueillir chez Moonkey Paris.<br /><br />
               Au-delà de 30 minutes de retard, la réservation sera considérée comme annulée.<br />
               En cas de problème, merci de nous contacter au <strong>07 44 54 87 13</strong>.
@@ -262,6 +276,7 @@ export async function sendReservationCancelledEmail(input: {
   prenom: string;
   date: string;
   creneau: string;
+  nombre_personnes: number;
 }): Promise<void> {
   const tx = getTransporter();
   if (!tx) return;
@@ -269,6 +284,10 @@ export async function sendReservationCancelledEmail(input: {
   const from = resolveFromAddress();
   const subject = "Moonkey Paris - Réservation non retenue";
   const prettyDate = toFrenchReservationDateLabel(input.date);
+  const nb =
+    input.nombre_personnes === 1
+      ? "1 personne"
+      : `${input.nombre_personnes} personnes`;
   const text = `Bonjour ${input.prenom},
 
 Nous vous remercions pour votre demande.
@@ -276,6 +295,7 @@ Malheureusement, nous ne pouvons pas confirmer votre réservation pour :
 
 Date : ${prettyDate}
 Horaire : ${input.creneau}
+Nombre de personnes : ${nb}
 
 N’hésitez pas à nous recontacter pour un autre créneau.
 
@@ -317,7 +337,8 @@ L'équipe Moonkey Paris`;
               Nous vous remercions pour votre demande.<br />
               Malheureusement, nous ne pouvons pas confirmer votre réservation pour :<br /><br />
               <strong>Date :</strong> ${prettyDate}<br />
-              <strong>Horaire :</strong> ${input.creneau}<br /><br />
+              <strong>Horaire :</strong> ${input.creneau}<br />
+              <strong>Nombre de personnes :</strong> ${input.nombre_personnes === 1 ? "1 personne" : `${input.nombre_personnes} personnes`}<br /><br />
               N’hésitez pas à nous recontacter pour un autre créneau.
             </td>
           </tr>

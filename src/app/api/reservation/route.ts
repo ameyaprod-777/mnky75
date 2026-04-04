@@ -269,6 +269,7 @@ export async function POST(request: NextRequest) {
       await sendReservationReceivedEmail({
         to: data.email,
         prenom: data.prenom,
+        nombre_personnes: data.nombre_personnes,
       });
     } catch (mailError) {
       console.error("[Reservation email]", mailError);

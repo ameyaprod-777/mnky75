@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS commandes (
   items JSONB NOT NULL DEFAULT '[]',  -- [{ "id": "c1", "nom": "...", "quantite": 2, "prix": 15 }]
   statut TEXT NOT NULL DEFAULT 'en_attente'
     CHECK (statut IN ('en_attente', 'en_preparation', 'pret', 'livre', 'annulee')),
+  numero_table TEXT,
   commentaire TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

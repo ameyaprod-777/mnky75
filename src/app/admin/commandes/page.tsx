@@ -85,9 +85,16 @@ export default function AdminCommandesPage() {
               className="rounded-2xl border border-jungle-800/30 bg-jungle-sage/40 p-4"
             >
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs text-jungle-500">
-                  {formatDate(c.created_at)}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-jungle-500">
+                    {formatDate(c.created_at)}
+                  </span>
+                  {c.numero_table && (
+                    <span className="rounded-full bg-jungle-700/50 px-2 py-0.5 text-xs text-gold-400/90">
+                      Table {c.numero_table}
+                    </span>
+                  )}
+                </div>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs ${
                     c.statut === "livre"

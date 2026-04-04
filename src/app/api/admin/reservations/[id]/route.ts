@@ -30,11 +30,12 @@ export async function PATCH(
       prenom: string;
       date: string;
       creneau: string;
+      nombre_personnes: number;
     }>(
       `UPDATE reservations
        SET statut = $1
        WHERE id = $2
-       RETURNING id, email, prenom, date, creneau`,
+       RETURNING id, email, prenom, date, creneau, nombre_personnes`,
       [statut, id]
     );
     if (!q || q.rowCount === 0) {
@@ -52,6 +53,7 @@ export async function PATCH(
             prenom: reservation.prenom,
             date: reservation.date,
             creneau: reservation.creneau,
+            nombre_personnes: reservation.nombre_personnes,
           });
         } catch (mailError) {
           console.error("[Reservation confirm email]", mailError);
@@ -67,6 +69,7 @@ export async function PATCH(
             prenom: reservation.prenom,
             date: reservation.date,
             creneau: reservation.creneau,
+            nombre_personnes: reservation.nombre_personnes,
           });
         } catch (mailError) {
           console.error("[Reservation cancel email]", mailError);

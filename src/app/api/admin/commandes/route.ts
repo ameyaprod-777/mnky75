@@ -11,11 +11,12 @@ export async function GET() {
       id: string;
       items: unknown;
       statut: string;
+      numero_table: string | null;
       commentaire: string | null;
       created_at: string;
       updated_at: string;
     }>(
-      `SELECT id, items, statut, commentaire, created_at, updated_at
+      `SELECT id, items, statut, numero_table, commentaire, created_at, updated_at
        FROM commandes
        ORDER BY created_at DESC`
     );
@@ -24,6 +25,7 @@ export async function GET() {
       id: r.id,
       items: (r.items as Commande["items"]) ?? [],
       statut: r.statut as Commande["statut"],
+      numero_table: r.numero_table ?? undefined,
       commentaire: r.commentaire ?? undefined,
       created_at: r.created_at,
       updated_at: r.updated_at,

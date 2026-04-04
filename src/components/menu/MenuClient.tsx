@@ -7,6 +7,7 @@ import { Leaf } from "lucide-react";
 import {
   MENU_CATEGORIES,
   MENU_ITEMS,
+  resolveMenuVariantLine,
   type MenuCategoryId,
 } from "@/lib/menu-data";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,8 @@ function getCategoryFromUrl(searchParams: ReturnType<typeof useSearchParams>): M
 export function MenuClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [variantPick, setVariantPick] = useState<Record<string, string>>({});
+  const [cuissonPick, setCuissonPick] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<MenuCategoryId | null>(
     () => getCategoryFromUrl(searchParams)
   );
@@ -136,31 +139,95 @@ export function MenuClient() {
                   {group.label}
                 </h2>
                 <ul className="space-y-1">
-                  {group.items.map((item, i) => (
-                    <motion.li
-                      key={item.id}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.03 * i }}
-                      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-jungle-800/40 py-4 last:border-0"
-                    >
-                      <div>
-                        <span className="font-medium text-jungle-cream">
-                          {item.nom}
-                        </span>
-                        {item.description && (
-                          <p className="mt-0.5 text-sm text-jungle-400/80">
-                            {item.description}
-                          </p>
+                  {group.items.map((item, i) => {
+                    const hasVariants = Boolean(item.variants?.length);
+                    const line = hasVariants
+                      ? resolveMenuVariantLine(item, variantPick, cuissonPick)
+                      : item;
+                    return (
+                      <motion.li
+                        key={item.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.03 * i }}
+                        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 border-b border-jungle-800/40 py-4 last:border-0"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span className="font-medium text-jungle-cream">
+                            {item.nom}
+                          </span>
+                          {item.description && (
+                            <p className="mt-0.5 text-sm text-jungle-400/80">
+                              {item.description}
+                            </p>
+                          )}
+                          {hasVariants && item.variants && (
+                            <>
+                              <label className="mt-2 block max-w-sm">
+                                <span className="sr-only">Option</span>
+                                <select
+                                  value={
+                                    variantPick[item.id] &&
+                                    item.variants.some((v) => v.key === variantPick[item.id])
+                                      ? variantPick[item.id]
+                                      : item.variants[0].key
+                                  }
+                                  onChange={(e) =>
+                                    setVariantPick((p) => ({
+                                      ...p,
+                                      [item.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="w-full rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30"
+                                >
+                                  {item.variants.map((v) => (
+                                    <option key={v.key} value={v.key}>
+                                      {item.garnitureChoice
+                                        ? v.label
+                                        : `${v.label} — ${formatPrix(v.prix)}`}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              {item.cuissonVariants && item.cuissonVariants.length > 0 && (
+                                <label className="mt-2 block max-w-sm">
+                                  <span className="sr-only">Cuisson</span>
+                                  <select
+                                    value={
+                                      cuissonPick[item.id] &&
+                                      item.cuissonVariants.some(
+                                        (c) => c.key === cuissonPick[item.id]
+                                      )
+                                        ? cuissonPick[item.id]
+                                        : item.cuissonVariants[0].key
+                                    }
+                                    onChange={(e) =>
+                                      setCuissonPick((p) => ({
+                                        ...p,
+                                        [item.id]: e.target.value,
+                                      }))
+                                    }
+                                    className="w-full rounded-lg border border-jungle-700/50 bg-jungle-sage/40 px-3 py-2 text-sm text-jungle-cream focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/30"
+                                  >
+                                    {item.cuissonVariants.map((c) => (
+                                      <option key={c.key} value={c.key}>
+                                        {c.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        {line.prix > 0 && (
+                          <span className="shrink-0 font-display text-base font-semibold text-gold-400/90">
+                            {formatPrix(line.prix)}
+                          </span>
                         )}
-                      </div>
-                      {item.prix > 0 && (
-                        <span className="shrink-0 font-display text-base font-semibold text-gold-400/90">
-                          {formatPrix(item.prix)}
-                        </span>
-                      )}
-                    </motion.li>
-                  ))}
+                      </motion.li>
+                    );
+                  })}
                 </ul>
               </motion.div>
             ))}

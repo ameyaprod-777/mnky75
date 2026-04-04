@@ -17,7 +17,6 @@ export function ReservationForm({ disabled, disabledCreneaux = [] }: Props) {
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAllSlots, setShowAllSlots] = useState(false);
   const [availability, setAvailability] = useState<
     { creneau: string; available: boolean }[] | null
   >(null);
@@ -134,17 +133,13 @@ export function ReservationForm({ disabled, disabledCreneaux = [] }: Props) {
   const selectableSlots = useMemo(() => {
     const baseParsed = parsedAvailability;
     if (!baseParsed) {
-      const base = dateCreneaux.filter((c) => !disabledCreneaux.includes(c));
-      return showAllSlots ? base : base.slice(0, 4);
+      return dateCreneaux.filter((c) => !disabledCreneaux.includes(c));
     }
 
-    const base = baseParsed
+    return baseParsed
       .filter((s) => !s.busy)
       .map((s) => s.creneau);
-
-    if (showAllSlots) return base;
-    return base.slice(0, 4);
-  }, [disabledCreneaux, showAllSlots, parsedAvailability, dateCreneaux]);
+  }, [disabledCreneaux, parsedAvailability, dateCreneaux]);
 
   if (success) {
     return (
@@ -296,15 +291,6 @@ export function ReservationForm({ disabled, disabledCreneaux = [] }: Props) {
             </option>
           ))}
         </select>
-        {dateCreneaux.filter((c) => !disabledCreneaux.includes(c)).length > 4 && (
-          <button
-            type="button"
-            onClick={() => setShowAllSlots((v) => !v)}
-            className="mt-1 text-xs text-jungle-400 underline-offset-2 hover:underline"
-          >
-            {showAllSlots ? "Afficher moins d’horaires" : "Voir plus d’horaires"}
-          </button>
-        )}
       </label>
       <label className="block">
         <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-jungle-400">
@@ -324,10 +310,16 @@ export function ReservationForm({ disabled, disabledCreneaux = [] }: Props) {
         >
           <option value="chicha_boissons">Chicha & boissons</option>
           <option value="repas_chicha">Repas + chicha</option>
-          <option value="chicha_uniquement">Chicha uniquement</option>
           <option value="repas_uniquement">Repas uniquement</option>
           <option value="anniversaire">Anniversaire</option>
         </select>
+        {form.experience === "anniversaire" && (
+          <p className="mt-1.5 text-xs text-gold-400/90">
+            Pour les anniversaires, nous vous contacterons par téléphone pour vous
+            donner plus de détails sur l&apos;offre et confirmer si la demande est
+            acceptée.
+          </p>
+        )}
         <p className="mt-1.5 text-xs text-jungle-500">
           La cuisine ferme à 23h. Pour dîner, merci de choisir un créneau
           adapté.

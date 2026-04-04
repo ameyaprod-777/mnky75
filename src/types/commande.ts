@@ -17,6 +17,7 @@ export interface Commande {
   id: string;
   items: CommandeItem[];
   statut: StatutCommande;
+  numero_table?: string;
   commentaire?: string;
   created_at: string;
   updated_at: string;
@@ -24,5 +25,6 @@ export interface Commande {
 
 export interface CommandeCreate {
   items: CommandeItem[];
+  numero_table: string;
   commentaire?: string;
 }
