@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasDatabaseUrl, query } from "@/lib/db";
+import { getLastQueryError, hasDatabaseUrl, query } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { MENU_CATEGORIES } from "@/lib/menu-data";
 import type { MenuCategoryId } from "@/lib/menu-data";
@@ -124,10 +124,13 @@ export async function POST(request: NextRequest) {
       [JSON.stringify(itemsStored), numeroTable, commentaire]
     );
     if (!q || q.rowCount === 0) {
+      const detail =
+        process.env.DATABASE_DEBUG === "1" ? getLastQueryError() : undefined;
       return NextResponse.json(
         {
           error:
-            "Base de données indisponible. Ouvrez /api/health/db sur votre site pour voir si PostgreSQL répond et si la table commandes existe (logs serveur : [DB] query error).",
+            "Base de données indisponible. Ouvrez GET /api/health/db sur votre site. Si la table manque, exécutez docker/init/02_commandes.sql sur PostgreSQL. Pour voir l'erreur SQL exacte, ajoutez DATABASE_DEBUG=1 dans .env.local et redémarrez l'app.",
+          ...(detail ? { postgresDetail: detail } : {}),
         },
         { status: 503 }
       );

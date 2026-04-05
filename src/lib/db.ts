@@ -4,6 +4,13 @@ const connectionString = process.env.DATABASE_URL;
 
 let pool: Pool | null = null;
 
+/** Dernière erreur PostgreSQL (pour diagnostic si DATABASE_DEBUG=1). */
+let lastQueryError: string | undefined;
+
+export function getLastQueryError(): string | undefined {
+  return lastQueryError;
+}
+
 /**
  * Pool PostgreSQL pour les API routes.
  * Si DATABASE_URL n'est pas défini, retourne null (mode sans BDD).
@@ -31,10 +38,12 @@ export async function query<T = unknown>(
   if (!p) return null;
   try {
     const result = await p.query(text, params);
+    lastQueryError = undefined;
     return { rows: result.rows as T[], rowCount: result.rowCount ?? 0 };
   } catch (e) {
     // En cas d'erreur de connexion (ECONNREFUSED, etc.), on retourne null
     // pour que les handlers API puissent gérer proprement l'absence de BDD.
+    lastQueryError = e instanceof Error ? e.message : String(e);
     console.error("[DB] query error", e);
     return null;
   }
