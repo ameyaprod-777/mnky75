@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { hasDatabaseUrl, query } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { MENU_CATEGORIES } from "@/lib/menu-data";
 import type { MenuCategoryId } from "@/lib/menu-data";
@@ -108,6 +108,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!hasDatabaseUrl()) {
+      return NextResponse.json(
+        {
+          error:
+            "Base de données non configurée : définissez DATABASE_URL sur le serveur (fichier .env.local à la racine du projet). Voir /api/health/db pour le détail.",
+        },
+        { status: 503 }
+      );
+    }
+
     const itemsStored = buildItemsWithRemiseFormules(body.items);
     const q = await query<{ id: string }>(
       `INSERT INTO commandes (items, numero_table, commentaire, statut) VALUES ($1::jsonb, $2, $3, 'en_attente') RETURNING id`,
@@ -115,7 +125,10 @@ export async function POST(request: NextRequest) {
     );
     if (!q || q.rowCount === 0) {
       return NextResponse.json(
-        { error: "Base de données indisponible." },
+        {
+          error:
+            "Base de données indisponible. Ouvrez /api/health/db sur votre site pour voir si PostgreSQL répond et si la table commandes existe (logs serveur : [DB] query error).",
+        },
         { status: 503 }
       );
     }

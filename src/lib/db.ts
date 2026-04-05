@@ -41,3 +41,61 @@ export async function query<T = unknown>(
 }
 
 export { getPool };
+
+/** Indique si une URL de connexion est définie (sans la divulguer). */
+export function hasDatabaseUrl(): boolean {
+  return Boolean(connectionString);
+}
+
+/**
+ * Diagnostic pour le déploiement : connexion et présence de la table commandes.
+ */
+export async function getDatabaseHealth(): Promise<{
+  databaseUrlDefined: boolean;
+  canConnect: boolean;
+  commandesTableOk: boolean;
+  postgresMessage?: string;
+}> {
+  if (!connectionString) {
+    return {
+      databaseUrlDefined: false,
+      canConnect: false,
+      commandesTableOk: false,
+      postgresMessage: "DATABASE_URL non défini (créez .env.local à la racine du projet Next.js)",
+    };
+  }
+  const pool = getPool();
+  if (!pool) {
+    return {
+      databaseUrlDefined: true,
+      canConnect: false,
+      commandesTableOk: false,
+      postgresMessage: "Pool non initialisé",
+    };
+  }
+  try {
+    await pool.query("SELECT 1");
+  } catch (e) {
+    return {
+      databaseUrlDefined: true,
+      canConnect: false,
+      commandesTableOk: false,
+      postgresMessage: e instanceof Error ? e.message : String(e),
+    };
+  }
+  try {
+    await pool.query("SELECT 1 FROM commandes LIMIT 1");
+  } catch (e) {
+    return {
+      databaseUrlDefined: true,
+      canConnect: true,
+      commandesTableOk: false,
+      postgresMessage: e instanceof Error ? e.message : String(e),
+    };
+  }
+  return {
+    databaseUrlDefined: true,
+    canConnect: true,
+    commandesTableOk: true,
+  };
+}
