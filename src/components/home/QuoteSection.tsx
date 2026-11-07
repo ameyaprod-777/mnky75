@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function QuoteSection() {
   return (
-    <section className="relative py-20 sm:py-28">
+    <section className="relative py-12 sm:py-16">
       <div className="mx-auto max-w-3xl px-5 sm:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -18,13 +18,9 @@ export function QuoteSection() {
           </p>
           <div className="mt-6 space-y-5 sm:space-y-6">
             <p className="font-display text-base font-semibold leading-relaxed text-jungle-cream sm:text-lg">
-              Happy hour : 16h – 20h
+              Offre spéciale filles
               <br />
-              <span className="text-gold-400/95">
-                Chicha Kaloud + soft 15€
-                <br />
-                Chicha Quasar + soft 20€
-              </span>
+              <span className="text-gold-400/95">Chicha + Matcha 15€</span>
             </p>
             <div className="mx-auto h-px w-24 bg-gradient-to-r from-transparent via-gold-500/50 to-transparent" />
             <p className="font-display text-base font-semibold leading-relaxed text-jungle-cream sm:text-lg">

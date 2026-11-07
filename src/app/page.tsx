@@ -9,10 +9,10 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <QuoteSection />
       <ChichaGallery />
       <ConceptSection />
       <MenuPreview />
-      <QuoteSection />
       <ReservationCta />
     </>
   );

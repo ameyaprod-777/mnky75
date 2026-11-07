@@ -104,6 +104,14 @@ function floridaVariants(prix: number): MenuItemVariant[] {
   ];
 }
 
+function matchaVariants(prix: number): MenuItemVariant[] {
+  return [
+    { key: "vanille", label: "VANILLE", prix },
+    { key: "mangue", label: "MANGUE", prix },
+    { key: "fraise", label: "FRAISE", prix },
+  ];
+}
+
 /** Cuisson pour certains plats (prix inchangé). */
 function cuissonPlatVariants(prix: number): MenuItemVariant[] {
   return [
@@ -406,4 +414,13 @@ export const MENU_ITEMS: MenuItemData[] = [
   { id: "b1", nom: "Thé à la menthe", description: "Traditionnel", prix: 5, categorie: "boissons" },
   { id: "b2", nom: "Café expresso / allongé", prix: 3, categorie: "boissons" },
   { id: "b3", nom: "Bouteille d'eau", prix: 3, categorie: "boissons" },
+  {
+    id: "b4",
+    nom: "MATCHA",
+    description: "Choisissez votre parfum ci-dessous",
+    prix: 7,
+    categorie: "boissons",
+    garnitureChoice: true,
+    variants: matchaVariants(7),
+  },
 ];
