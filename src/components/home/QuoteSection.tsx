@@ -20,7 +20,7 @@ export function QuoteSection() {
             <p className="font-display text-base font-semibold leading-relaxed text-jungle-cream sm:text-lg">
               Offre spéciale filles
               <br />
-              <span className="text-gold-400/95">Chicha + Matcha 15€</span>
+              <span className="text-gold-400/95">Chicha + Matcha 20€</span>
             </p>
             <div className="mx-auto h-px w-24 bg-gradient-to-r from-transparent via-gold-500/50 to-transparent" />
             <p className="font-display text-base font-semibold leading-relaxed text-jungle-cream sm:text-lg">
